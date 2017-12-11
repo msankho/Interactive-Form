@@ -7,6 +7,7 @@ function page_load_actions(){
 	$('#bitcoin').hide();
 	$('#other-title').hide();
 	$('#total_cost').hide();
+	$('#colors-js-puns').hide();
 }
 
 let total_cost = 0;
@@ -26,16 +27,24 @@ $('#title').change(()=> {
 
 });
 
+// Hide the t-shirts color menu when the design is not selected
+// When the design is selected, display the relevant colors to the design
+
 $('#design').change(()=>{
 
 	switch($('#design').val()){
 		case 'js puns':
+			$('#colors-js-puns').show();
 			$('.js-pun').show();
 			$('.heart-js').hide();
 			break;
 		case 'heart js':
+			$('#colors-js-puns').show();
 			$('.js-pun').hide();
 			$('.heart-js').show();
+			break;
+		default:
+			$('#colors-js-puns').hide();
 			break;
 	}
 
@@ -120,7 +129,7 @@ function checkEmail(email) {
 // ********************************************************************************************************* //
 
 
-function validate_field_and_display_error ($pass_condition, $error_id, error_message){
+function validate_field_and_display_error ($input_field_id, $pass_condition, $error_id, error_message){
 
 	$error_span = $($error_id);
 	$error = true;
@@ -128,10 +137,20 @@ function validate_field_and_display_error ($pass_condition, $error_id, error_mes
 	if(!$pass_condition){
 		$error_span.text(error_message);
 		$error_span.closest('label').addClass('error');
+
+		if($($input_field_id)[0].type == 'text' || $($input_field_id)[0].type == 'email'){
+			$($input_field_id).addClass('error');
+		}
+
 		$error = true;
 	} else {
 		$error_span.empty();
 		$error_span.closest('label').removeClass('error');
+
+		if($($input_field_id)[0].type == 'text' || $($input_field_id)[0].type == 'email'){
+			$($input_field_id).removeClass('error');
+		}
+
 		$error = false;
 	}
 
@@ -152,30 +171,35 @@ $("button[type='submit']").click((event)=>{
 
 			'name':	{
 					'err_message': ['(please provide your name)'],
+					'input_field_id': '#name',
 					'pass_condition': $('#name').val(),
 					'err_span': '#name-error-message'
 					},
 
 			'email': {
 					'err_message': ['(please provide a valid email address)'],
+					'input_field_id': '#mail',
 					'pass_condition': checkEmail($('#mail').val()),
 					'err_span': '#email-error-message'
 					},
 
 			'tshirt': {
 					'err_message': ["Don't forget to pick a T-shirt"],
+					'input_field_id': '#design',
 					'pass_condition': !($('#design').val() === 'Select Theme'),
 					'err_span': '#tshirt-error-message'
 					},
 
 			'activities': {
 					'err_message': ["Please select an Activity"],
+					'input_field_id': '.activities',
 					'pass_condition': activities_selected,
 					'err_span': '#activities-error-message'
 					},
 
 			'payment_method': {
 					'err_message': ["Please select a payment method"],
+					'input_field_id': '#payment',
 					'pass_condition': !($('#payment').val() === 'select_method'),
 					'err_span': '#payment-method-error-message'
 					}
@@ -187,6 +211,7 @@ $("button[type='submit']").click((event)=>{
 
 			'cc_num':	{
 					'input': $('#cc-num'),
+					'input_field_id': '#cc-num',
 					'err_message': ['(enter a cc number)', '(invalid)', '(13 to 16 digits)'],
 					'err_span': '#cc-num-error-message',
 					'range': [13, 16]
@@ -194,6 +219,7 @@ $("button[type='submit']").click((event)=>{
 
 			'cc_zipcode':	{
 					'input': $('#zip'),
+					'input_field_id': '#zip',
 					'err_message': ['(enter code)', '(invalid)', '(5 digits)'],
 					'err_span': '#zipcode-error-message',
 					'range': [5]
@@ -201,6 +227,7 @@ $("button[type='submit']").click((event)=>{
 
 			'cc_cvv':	{
 					'input': $('#cvv'),
+					'input_field_id': '#cvv',
 					'err_message': ['(enter cvv)', '(invalid)', '(3 digits)'],
 					'err_span': '#cvv-error-message',
 					'range': [3]
@@ -211,18 +238,27 @@ $("button[type='submit']").click((event)=>{
 
 
 	for(var key in validation_errors){
-		$error = validate_field_and_display_error(validation_errors[key]['pass_condition'], validation_errors[key]['err_span'], validation_errors[key]['err_message'][0]);
+		$error = validate_field_and_display_error(validation_errors[key]['input_field_id'],validation_errors[key]['pass_condition'], validation_errors[key]['err_span'], validation_errors[key]['err_message'][0]);
 		
 	}
 
 	if($('#payment').val() === 'credit card'){
 		for(var cckey in cc_errors){
 				$error_no = validate_numeric_fields(cc_errors[cckey]['input'], cc_errors[cckey]['range']);
-				validate_field_and_display_error(!$error_no, cc_errors[cckey]['err_span'], cc_errors[cckey]['err_message'][$error_no -1]);
+				validate_field_and_display_error(cc_errors[cckey]['input_field_id'], !$error_no, cc_errors[cckey]['err_span'], cc_errors[cckey]['err_message'][$error_no -1]);
 		}
 	}
 
 
+});
+
+// Validate the credit card number as it is being typed.
+
+$('#cc-num').on('keyup', ($e)=>{
+
+	$err_message = ['(enter a cc number)', '(only numbers please)', '(13 to 16 digits)'];
+	$error_no = validate_numeric_fields($('#cc-num'), [13, 16]);
+	validate_field_and_display_error('#cc-num', !$error_no, '#cc-num-error-message', $err_message[$error_no -1]);
 });
 
 // ********************************************************************************************************* //

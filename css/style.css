@@ -95,6 +95,10 @@ input {
 	outline: none;
 }
 
+input.error{
+	border: 2px solid red;
+}
+
 input:focus {
 	background: #fff;
 	border-color: #5e97b0;
