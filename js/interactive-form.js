@@ -34,14 +34,18 @@ $('#design').change(()=>{
 
 	switch($('#design').val()){
 		case 'js puns':
-			$('#colors-js-puns').show();
-			$('.js-pun').show();
 			$('.heart-js').hide();
+			$('.js-pun').show();
+			$('.js-pun')[0].selected = 'selected';
+			$('#colors-js-puns').show();
+			$('#color').focus();
 			break;
 		case 'heart js':
-			$('#colors-js-puns').show();
 			$('.js-pun').hide();
 			$('.heart-js').show();
+			$('.heart-js')[0].selected = 'selected';
+			$('#colors-js-puns').show();
+			$('#color').focus();
 			break;
 		default:
 			$('#colors-js-puns').hide();
@@ -72,6 +76,93 @@ $('#payment').change((e) => {
 
 	}
 });
+
+
+// ********************************************************************************************************* //
+// From a given activity text, separate name, cost, and time 
+// ********************************************************************************************************* //
+
+function process_activity(node){
+
+		$text = node.textContent;
+		[$details, $cost] = $text.split('$');
+		$details = $details.replace(',', '');
+		[$name, $time] = $details.split(':');
+		$activity = {
+			'name': $name.trim(),
+			'time': $time.trim(),
+			'cost': $cost.trim()
+		};
+
+	return $activity;
+}
+
+
+// ********************************************************************************************************* //
+// Calculate and display the total cost of the activities selected                                           //
+// Add the cost if the activity is checked, and subtract the cost if activity is unchecked                   //
+// ********************************************************************************************************* //
+
+
+function display_total_cost($target){
+
+	$current_activity = process_activity($target.parentNode);
+	if($target.checked){
+		total_cost += parseInt($current_activity['cost']);
+	} else {
+		total_cost -= parseInt($current_activity['cost']);
+	} 
+	$('#total_cost').text('Total Cost: ' + total_cost);
+	$('#total_cost').show();
+
+}
+
+// ********************************************************************************************************* //
+// Once an activity is checked, find out if there is another activity at the same time                       //
+// If a conflicting activity exists then disable it from being selected                                      //
+// If a given activity is unchecked, then enable other conflicting activities                                //
+// ********************************************************************************************************* //
+
+
+function toggle_conflicting_activities($checked, $checked_activity){
+
+	$activity_details.each(($index)=>{
+
+		// if current activity time and activities index time conflict 
+		$activity = $activity_details[$index].textContent;
+		if($checked_activity['time'] && $activity.includes($checked_activity['time']) && !$activity.includes($checked_activity['name'])){
+			if($checked) {
+				$activity_details[$index].children[0].disabled = true;
+			} else {
+				$activity_details[$index].children[0].disabled = false;
+			}
+		}
+	});
+}
+
+
+// ********************************************************************************************************* //
+// Handler for activities checked.
+// In addition to calling functions to calculate total cost and toggling a conflicting activity,
+// calculate the total number of activities selected for validation
+// ********************************************************************************************************* //
+
+$('.activities').change((e)=>{
+	$target = e.target;
+
+	// Display the total cost of the activities
+	display_total_cost($target);
+	if($target.checked) {
+		activities_selected ++;
+	} else {
+		activities_selected --;
+	}
+
+	// Disable/enable the activities that conflict with the time
+	toggle_conflicting_activities($target.checked, $current_activity);
+
+});
+
 
 // ********************************************************************************************************* //
 // Function to test if the numberic fields such as credit card number, cvv number and zipcode are valid      //
@@ -156,6 +247,17 @@ function validate_field_and_display_error ($input_field_id, $pass_condition, $er
 
 	return $error;
 }
+
+
+// Validate the credit card number as it is being typed.
+
+$('#cc-num').on('keyup', ($e)=>{
+
+	$err_message = ['(enter a cc number)', '(only numbers please)', '(13 to 16 digits)'];
+	$error_no = validate_numeric_fields($('#cc-num'), [13, 16]);
+	validate_field_and_display_error('#cc-num', !$error_no, '#cc-num-error-message', $err_message[$error_no -1]);
+});
+
 
 // ********************************************************************************************************* //
 // Handler for submit button                                                                                 //
@@ -251,96 +353,3 @@ $("button[type='submit']").click((event)=>{
 
 
 });
-
-// Validate the credit card number as it is being typed.
-
-$('#cc-num').on('keyup', ($e)=>{
-
-	$err_message = ['(enter a cc number)', '(only numbers please)', '(13 to 16 digits)'];
-	$error_no = validate_numeric_fields($('#cc-num'), [13, 16]);
-	validate_field_and_display_error('#cc-num', !$error_no, '#cc-num-error-message', $err_message[$error_no -1]);
-});
-
-// ********************************************************************************************************* //
-// Calculate and display the total cost of the activities selected                                           //
-// Add the cost if the activity is checked, and subtract the cost if activity is unchecked                   //
-// ********************************************************************************************************* //
-
-
-function display_total_cost($target){
-
-	$current_activity = process_activity($target.parentNode);
-	if($target.checked){
-		total_cost += parseInt($current_activity['cost']);
-	} else {
-		total_cost -= parseInt($current_activity['cost']);
-	} 
-	$('#total_cost').text('Total Cost: ' + total_cost);
-	$('#total_cost').show();
-
-}
-
-// ********************************************************************************************************* //
-// Once an activity is checked, find out if there is another activity at the same time                       //
-// If a conflicting activity exists then disable it from being selected                                      //
-// If a given activity is unchecked, then enable other conflicting activities                                //
-// ********************************************************************************************************* //
-
-
-function toggle_conflicting_activities($checked, $checked_activity){
-
-	$activity_details.each(($index)=>{
-
-		// if current activity time and activities index time conflict 
-		$activity = $activity_details[$index].textContent;
-		if($activity.includes($checked_activity['time']) && !$activity.includes($checked_activity['name'])){
-			if($checked) {
-				$activity_details[$index].children[0].disabled = true;
-			} else {
-				$activity_details[$index].children[0].disabled = false;
-			}
-		}
-	});
-}
-
-
-// ********************************************************************************************************* //
-// Handler for activities checked.
-// In addition to calling functions to calculate total cost and toggling a conflicting activity,
-// calculate the total number of activities selected for validation
-// ********************************************************************************************************* //
-
-$('.activities').change((e)=>{
-	$target = e.target;
-
-	// Display the total cost of the activities
-	display_total_cost($target);
-	if($target.checked) {
-		activities_selected ++;
-	} else {
-		activities_selected --;
-	}
-
-	// Disable/enable the activities that conflict with the time
-	toggle_conflicting_activities($target.checked, $current_activity);
-
-});
-
-// ********************************************************************************************************* //
-// From a given activity text, separate name, cost, and time 
-// ********************************************************************************************************* //
-
-function process_activity(node){
-
-		$text = node.textContent;
-		[$details, $cost] = $text.split('$');
-		$details = $details.replace(',', '');
-		[$name, $time] = $details.split(':');
-		$activity = {
-			'name': $name.trim(),
-			'time': $time.trim(),
-			'cost': $cost.trim()
-		};
-
-	return $activity;
-}
