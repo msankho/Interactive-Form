@@ -267,7 +267,7 @@ $('#cc-num').on('keyup', ($e)=>{
 $("button[type='submit']").click((event)=>{
 	event.preventDefault();
 
-
+	$errors = 0;
 	// An object to hold the error messages, validation conditions and the span to display the error messages
 	let validation_errors = {
 
@@ -340,16 +340,21 @@ $("button[type='submit']").click((event)=>{
 
 
 	for(var key in validation_errors){
-		$error = validate_field_and_display_error(validation_errors[key]['input_field_id'],validation_errors[key]['pass_condition'], validation_errors[key]['err_span'], validation_errors[key]['err_message'][0]);
-		
+		$err = validate_field_and_display_error(validation_errors[key]['input_field_id'],validation_errors[key]['pass_condition'], validation_errors[key]['err_span'], validation_errors[key]['err_message'][0]);
+		if ($err) $errors++;
 	}
 
 	if($('#payment').val() === 'credit card'){
 		for(var cckey in cc_errors){
 				$error_no = validate_numeric_fields(cc_errors[cckey]['input'], cc_errors[cckey]['range']);
 				validate_field_and_display_error(cc_errors[cckey]['input_field_id'], !$error_no, cc_errors[cckey]['err_span'], cc_errors[cckey]['err_message'][$error_no -1]);
+				if ($error_no) $errors++;
 		}
 	}
 
+	//Submit the form if there are no errors
+	if(!$errors) {
+		$('form').submit();
+	}
 
 });
